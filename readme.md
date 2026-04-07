@@ -1,22 +1,32 @@
-# MJC Safenet
+# Safenet
 
-Application web statique de simulation « compte à rebours / piratage » à usage pédagogique ou événementiel (escape game, atelier sensibilisation).
+Application web **statique** : simulateur d’interface « hacking » pour un **escape game** autour de la cybersécurité, destiné à un public jeune en contexte d’animation (ex. événement, atelier sensibilisation).
 
 ---
 
 ## 1. Besoins du client
 
-### Objectifs
+### Contexte et cible
 
-- Proposer une **mise en scène immersive** type terminal / cyberattaque sans dépendre d’un backend ni d’infrastructure complexe.
-- Offrir un **minuteur visible** (avec précision visuelle élevée), des **retours sensoriels** (sons, animations) et une **zone de saisie de code** pour clôturer le scénario.
-- Permettre à un **animateur** d’ajuster durée, code de désactivation et pénalités **sans recompiler** le projet.
+Le besoin exprimé portait sur un **événement de sensibilisation à la cybersécurité** auprès de **jeunes** : il fallait un support numérique capable de matérialiser, de façon ludique et collective, la tension d’une **situation de crise cyber** sans utiliser d’outils réels d’attaque ou d’accès à des systèmes.
+
+### Objectifs fonctionnels et pédagogiques
+
+
+| Objectif                  | Description technique / pédagogique                                                                                                                                                                                                                                     |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Scénario type escape game | Le dispositif incarne un **compte à rebours** et une interface « terminal » : les participants doivent **retrouver le mot de passe / code de désactivation** dans le **temps imparti** pour **mettre fin à la fiction du piratage** (arrêt du minuteur et du scénario). |
+| Engagement du groupe      | **Retours visuels et sonores** (minuteur précis, console factice, fond animé) pour maintenir l’attention et le rythme en salle ou sur grand écran.                                                                                                                      |
+| Pilotage par l’animateur  | **Paramétrage sans recompilation** : durée, secret de désactivation, pénalités en cas d’essais erronés — adaptables au niveau du groupe et au déroulé de l’atelier.                                                                                                     |
+| Autonomie technique       | Solution **100 % client**, **sans backend** ni compte utilisateur : déploiement léger (fichiers statiques), adapté à un poste projeté ou une salle équipée d’un navigateur.                                                                                             |
+
 
 ### Problématiques initiales
 
-- Éviter toute confusion avec un outil réel d’intrusion : l’expérience doit rester **clairement factice** et **autonome** (pas de connexion à des systèmes réels).
-- Garantir une **mise en œuvre simple** sur poste ou vidéoprojecteur (fichiers statiques, pas de chaîne de build obligatoire).
-- Assurer une **expérience audio fiable** selon les navigateurs (politiques de lecture média, notamment hors HTTP).
+- **Légitimité et cadre légal** : proposer une **mise en scène explicitement fictive**, sans connexion à des infrastructures réelles ni incitation à des comportements illicites ; l’outil sert le **discours pédagogique** (réaction face à une alerte, importance des mots de passe, gestion du stress, etc.).
+- **Clarté pour le public jeune** : distinguer **jeu / simulation** et **cybersécurité réelle** ; le narratif « empêcher le hacking » reste **symbolique** et encadré par l’animation.
+- **Fiabilité en conditions réelles d’événement** : installation rapide, peu de dépendances ; **audio** et affichage stables selon le navigateur et le mode de service (HTTP local vs `file://`).
+- **Gestion du secret** : le code est une **énigme à résoudre dans le parcours** (indices, énigmes papier, etc.) tout en restant **configurable** côté animateur — avec les limites de sécurité propres à une appli entièrement côté client (voir § 3).
 
 ---
 
@@ -24,19 +34,21 @@ Application web statique de simulation « compte à rebours / piratage » à usa
 
 ### 2.1 Pile technique
 
-| Couche | Technologies |
-|--------|----------------|
-| Structure | HTML5, sémantique de base, éléments médias natifs (`<audio>`) |
-| Présentation | CSS3 (flexbox, animations, `@font-face`) |
-| Comportement | JavaScript ES6 (écouteurs d’événements, `CanvasRenderingContext2D`, timers) |
-| Ressources externes | Google Fonts (Press Start 2P) — chargement HTTPS |
+
+| Couche              | Technologies                                                                |
+| ------------------- | --------------------------------------------------------------------------- |
+| Structure           | HTML5, sémantique de base, éléments médias natifs (`<audio>`)               |
+| Présentation        | CSS3 (flexbox, animations, `@font-face`)                                    |
+| Comportement        | JavaScript ES6 (écouteurs d’événements, `CanvasRenderingContext2D`, timers) |
+| Ressources externes | Google Fonts (Press Start 2P) — chargement HTTPS                            |
+
 
 **Build** : aucun. **Runtime** : moteur JavaScript du navigateur uniquement.
 
 ### 2.2 Arborescence du dépôt
 
 ```
-MJC_Safenet/
+Safenet/
 ├── index.html                 # Document unique, point d’entrée HTTP
 ├── LICENSE
 ├── readme.md
@@ -62,8 +74,8 @@ MJC_Safenet/
 flowchart TB
   subgraph client["Navigateur client"]
     HTML["index.html\n(DOM + audio)"]
-    CSS["style.css"]
-    JS["script.js"]
+    CSS["assets/css/style.css"]
+    JS["assets/js/script.js"]
     Canvas["Canvas #binaryBackground"]
     HTML --> CSS
     HTML --> JS
@@ -79,15 +91,19 @@ flowchart TB
   JS --> I
 ```
 
+
+
 ### 2.4 Modules fonctionnels côté code
 
-| Zone DOM / fichier | Responsabilité |
-|--------------------|----------------|
-| `#binaryBackground` + `script.js` | Pluie binaire animée (Canvas 2D, redimensionnement fenêtre) |
-| `#timer`, `#content` | Affichage du compte à rebours et conteneur principal |
-| `#output-console` | Flux de lignes simulées type shell |
-| `#terminal`, `#feedback` | Saisie du code, validation, messages utilisateur |
-| `#adminPanel` | Configuration animateur (masquée par défaut, raccourci clavier) |
+
+| Zone DOM / fichier                | Responsabilité                                                  |
+| --------------------------------- | --------------------------------------------------------------- |
+| `#binaryBackground` + `script.js` | Pluie binaire animée (Canvas 2D, redimensionnement fenêtre)     |
+| `#timer`, `#content`              | Affichage du compte à rebours et conteneur principal            |
+| `#output-console`                 | Flux de lignes simulées type shell                              |
+| `#terminal`, `#feedback`          | Saisie du code, validation, messages utilisateur                |
+| `#adminPanel`                     | Configuration animateur (masquée par défaut, raccourci clavier) |
+
 
 Le point d’exécution est la fonction `init()` dans `assets/js/script.js`, déclenchée sur `DOMContentLoaded` (ou immédiatement si le DOM est déjà prêt).
 
@@ -104,64 +120,40 @@ Le point d’exécution est la fonction `init()` dans `assets/js/script.js`, dé
 
 ### 3.2 Mesures recommandées selon le contexte d’usage
 
-| Contexte | Recommandation |
-|----------|----------------|
-| Atelier / escape game contrôlé | Documenter le raccourci admin **uniquement** pour les animateurs ; ne pas présenter l’outil comme un « vrai » système sécurisé. |
-| Déploiement public (URL ouverte) | Remplacer le raccourci fixe par un **mot de passe ou code** configurable, ou retirer le panneau du livrable « joueur » et fournir une variante « animateur » séparée. |
-| Réduction de la surface réseau | Héberger localement la police Press Start 2P (auto-hébergement) pour supprimer l’appel à Google Fonts. |
-| Durcissement général | Servir le site en **HTTPS**, en-têtes de sécurité adaptés (`Content-Security-Policy`, `X-Content-Type-Options`, etc.) sur le serveur web choisi. |
+
+| Contexte                               | Recommandation                                                                                                                                                                              |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Atelier jeunesse / escape game encadré | Documenter le raccourci admin **uniquement** pour les animateurs ; rappeler en amont que la scène est **fiction pédagogique** ; ne pas présenter l’outil comme un système de sécurité réel. |
+| Déploiement public (URL ouverte)       | Remplacer le raccourci fixe par un **mot de passe ou code** configurable, ou retirer le panneau du livrable « joueur » et fournir une variante « animateur » séparée.                       |
+| Réduction de la surface réseau         | Héberger localement la police Press Start 2P (auto-hébergement) pour supprimer l’appel à Google Fonts.                                                                                      |
+| Durcissement général                   | Servir le site en **HTTPS**, en-têtes de sécurité adaptés (`Content-Security-Policy`, `X-Content-Type-Options`, etc.) sur le serveur web choisi.                                            |
+
 
 > **Rappel pédagogique** : cette application est une **simulation visuelle et sonore**. Elle ne doit pas être utilisée pour la protection de données sensibles ni comme démonstration de sécurité réelle.
 
 ---
 
-## 4. Méthode de déploiement
+## 4. Hébergement
 
-### 4.1 Prérequis
-
-- Navigateur récent (Chrome, Firefox, Edge, Safari).
-- Fichiers sous `assets/` présents et chemins inchangés (voir arborescence ci-dessus).
-
-### 4.2 Environnement cible
-
-Tout hébergement capable de servir des **fichiers statiques** avec le type MIME correct :
-
-- serveur web classique (**Nginx**, **Apache**, **Caddy**) ;
-- offres **hébergement statique** (GitHub Pages, GitLab Pages, Netlify, Cloudflare Pages, etc.) ;
-- partage réseau local via un mini-serveur HTTP.
-
-La **racine document** du site doit être le répertoire contenant `index.html` (souvent la racine du dépôt cloné).
-
-### 4.3 Étapes types
-
-1. **Transférer** l’intégralité du projet (y compris `assets/`) vers l’hôte ou le bucket statique.
-2. **Vérifier** que l’URL racine résout vers `index.html` (souvent configuration par défaut).
-3. **Tester** en HTTPS si possible, et valider la **lecture audio** (certaines politiques navigateur exigent une interaction utilisateur avant lecture).
-
-### 4.4 Développement local
-
-```bash
-# Exemple : serveur HTTP intégré Python 3, depuis la racine du projet
-python3 -m http.server 8080
-```
-
-Accès : `http://localhost:8080/`.
-
-> En ouverture directe `file://`, certains navigateurs **bloquent ou limitent** l’audio ; un serveur HTTP local est recommandé pour des tests représentatifs.
+Le site est **hébergé sur [GitHub Pages](https://pages.github.com/)** : le dépôt sert des fichiers statiques (`index.html` à la racine, dossier `assets/`), sans build ni serveur applicatif. L’URL publique dépend des réglages du dépôt (onglet *Settings → Pages* sur GitHub).
 
 ---
 
 ## 5. Ce que fait l’application / le site
 
-### 5.1 Parcours « joueur »
+### 5.1 Parcours « joueur » (escape game)
 
-- Affichage d’un **compte à rebours** au format heures : minutes : secondes : **centièmes**, avec changement visuel sous le seuil d’une minute et **bip** sonore chaque seconde sur la dernière minute.
-- **Console factice** : ajout périodique de lignes pseudo-aléatoires évoquant des commandes shell, tant que le minuteur est actif.
-- **Fond animé** : colonnes de `0` / `1` sur canvas plein écran ; effets de couleur (alerte) en cas d’erreur ou d’échec.
-- **Saisie d’un code** : comparaison stricte (après trim) avec le code configuré ; en cas de succès, arrêt du scénario, message de réussite et effets visuels associés ; en cas d’échec, son d’erreur, **pénalité temporelle** et retour visuel.
-- **Fin du temps** : son de fin, message d’échec, animation d’écran, affichage possible d’une image d’échec (`fail.webp`), masquage du terminal de saisie.
+Dans le **scénario pédagogique**, l’équipe dispose d’un temps limité pour **« désactiver l’attaque »** en trouvant le **mot de passe de désactivation** (découvert via le parcours d’énigmes / consignes animateur). Côté logiciel, cela se traduit par :
+
+- Un **compte à rebours** visible (heures : minutes : secondes : **centièmes**), renforcé sous la dernière minute par un **bip** chaque seconde et un style d’alerte.
+- Une **console factice** qui défile des lignes type shell pour renforcer l’immersion « système en cours d’intrusion » tant que le chrono tourne.
+- Un **fond binaire animé** (canvas plein écran) avec variations visuelles en cas de stress (erreurs, fin de temps).
+- Un **champ de saisie** : si le code saisi correspond (après trim) au paramètre animateur, le minuteur et la fiction s’**arrêtent sur une réussite** ; sinon, **pénalité** sur le temps restant, son et effets d’alerte.
+- Si le temps est écoulé **sans** bon code : fin de partie « échec » (sons, animations, image `fail.webp` possible, terminal masqué) — support de discussion pour l’animateur (gestion de crise, préparation, etc.).
 
 ### 5.2 Parcours « animateur »
+
+En amont ou pendant l’événement, l’animateur règle le dispositif sans toucher au code source :
 
 - **Alt + A** : affiche ou masque le panneau d’administration.
 - Champs : durée (heures / minutes / secondes), **mot de passe de désactivation**, **pénalité** (secondes par défaut ; unité minutes possible si un sélecteur `#adminPenaltyUnit` est ajouté au DOM).
@@ -169,14 +161,9 @@ Accès : `http://localhost:8080/`.
 
 ### 5.3 Paramètres par défaut (modifiables via l’admin)
 
+
 | Paramètre | Valeur initiale |
-|-----------|-----------------|
-| Durée | 60 minutes |
-| Code | `netsafe` |
-| Pénalité | 10 secondes |
-
----
-
-## Licence
-
-Projet sous licence **MIT** — voir le fichier `LICENSE` (copyright SandersonnDev).
+| --------- | --------------- |
+| Durée     | 60 minutes      |
+| Code      | `netsafe`       |
+| Pénalité  | 10 secondes     |
